@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.lulin.demo.comm.okhttp3;
 
 import java.io.IOException;
@@ -16,32 +13,34 @@ import org.slf4j.LoggerFactory;
 * description  OkHttpUtil
 * @author LouLvLin
 * @date  2019/2/1  16:54
-* @param 
-* @return 
 **/
 public class OkHttpUtil {
-	private static OkHttpClient singleton;
 	private static final Logger LOGGER = LoggerFactory.getLogger(OkHttpUtil.class);
 	private OkHttpUtil() {
 	}
-	
+
 	/**
-	 * <p>Title: getInstance </p>
-	 * <p>Description: TODO </p>
+	 * description  OkHttpClient  lazily initialised
+	 * @author LouLvLin
+	 * @date  2019/2/15  15:30
+	 * @param
 	 * @return
-	 */
-	public static OkHttpClient getInstance() {
-		if (null == singleton) {
-			synchronized (OkHttpUtil.class) {
-				if (null == singleton) {
-					singleton = new OkHttpClient.Builder()
-							.connectTimeout(10, TimeUnit.SECONDS)
-							.readTimeout(120, TimeUnit.SECONDS).build();
-				}
-			}
-		}
-		return singleton;
+	 **/
+	private static class OkHttpClientHolder {
+		public static OkHttpClient okHttpClient = new OkHttpClient.Builder()
+				.connectTimeout(10, TimeUnit.SECONDS)
+				.readTimeout(120, TimeUnit.SECONDS).build();
 	}
+	/**
+	 * description  获取getOkHttpClient 实例
+	 * @author LouLvLin
+	 * @date  2019/2/15  15:31
+	 * @return okhttp3.OkHttpClient
+	 **/
+	private static OkHttpClient getOkHttpClient(){
+		return  OkHttpUtil.OkHttpClientHolder.okHttpClient;
+	}
+
 	/**
 	 * <p>Title: getStringFromServer </p>
 	 * <p>Description: 通过 url获取string  get请求 </p>
@@ -51,7 +50,7 @@ public class OkHttpUtil {
 	public static String getStringFromServer(String url) {
 		String result = "";
 		try {
-			Response response = getInstance()
+			Response response = getOkHttpClient()
 					.newCall(OkHttpRequestUtil.buildGetRequest(url)).execute();
 			
 			if (!response.isSuccessful()) {
@@ -60,7 +59,7 @@ public class OkHttpUtil {
 			result = response.body().string();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			LOGGER.error("getDongHuanInfo error: ",e);
+			LOGGER.error("getStringFromServer error: ",e);
 		}
 		return result;
 	}
@@ -75,7 +74,7 @@ public class OkHttpUtil {
 	public static String getStringFromServerByPost(String url,String parameterJsonType) {
 		String result = "";
 		try {
-			Response response = getInstance()
+			Response response = getOkHttpClient()
 					.newCall(OkHttpRequestUtil.buildPostJsonRequest(url,parameterJsonType)).execute();
 			
 			if (!response.isSuccessful()) {
@@ -84,7 +83,7 @@ public class OkHttpUtil {
 			result = response.body().string();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			LOGGER.error("getDongHuanInfo error: ",e);
+			LOGGER.error("getStringFromServerByPost error: ",e);
 		}
 		return result;
 	}
