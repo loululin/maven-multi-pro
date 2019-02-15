@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/task
+           http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <!-- spring 配置文件 定时任务 start -->
+    <bean name="scheduleTask" class="com.lulin.demo.quartz.ScheduleTask"
+          lazy-init="false"></bean>
+    <task:scheduled-tasks>
+        <task:scheduled ref="scheduleTask" method="websocketTask"
+                        cron="*/10 * * * * ?"/>
+    </task:scheduled-tasks>
+    <!-- spring 配置文件 定时任务 end -->
+</beans>           

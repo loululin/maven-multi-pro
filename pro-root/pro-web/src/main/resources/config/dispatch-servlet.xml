@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:aop="http://www.springframework.org/schema/aop" xmlns:util="http://www.springframework.org/schema/util"
+	   xmlns:websocket="http://www.springframework.org/schema/websocket"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/websocket
+        http://www.springframework.org/schema/websocket/spring-websocket.xsd">
+
+	<mvc:resources location="/" mapping="/**/*.html" />
+	<mvc:resources location="/" mapping="/**/*.js" />
+	<mvc:resources location="/" mapping="/**/*.json" />
+	<mvc:resources location="/" mapping="/**/*.map" />
+	<mvc:resources location="/" mapping="/**/*.css" />
+	<mvc:resources location="/" mapping="/**/*.png" />
+	<mvc:resources location="/" mapping="/**/*.gif" />
+	<mvc:resources location="/" mapping="/**/*.xml" />
+	<mvc:resources location="/" mapping="/**/*.ico" />
+	<mvc:resources location="/" mapping="/**/*.jpg" />
+	<mvc:resources location="/" mapping="/**/*.eot" />
+	<mvc:resources location="/" mapping="/**/*.ttf" />
+	<mvc:resources location="/" mapping="/**/*.woff" />
+	<mvc:resources location="/" mapping="/**/*.mp4" />
+	<mvc:resources location="/" mapping="/**/*.tpl" />
+	<mvc:resources location="/" mapping="/**/*.mp3" />
+	<!-- for swagger2 config -->
+	<mvc:default-servlet-handler />
+	<!-- 自动扫描controller包下的所有类，如果@Controller注入为bean -->
+	<context:component-scan
+			base-package="com.lulin.demo.controller,com.lulin.demo.websocket" />
+	<!-- util包下配置ControllerAdvice做全局异常处理 -->
+	<context:component-scan base-package="com.lulin.demo.comm.exception"
+							use-default-filters="false">
+		<context:include-filter type="annotation"
+								expression="org.springframework.web.bind.annotation.ControllerAdvice" />
+	</context:component-scan>
+
+	<!-- Configure to plugin JSON as request and response in method handler -->
+	<bean
+			class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<ref bean="jsonMessageConverter" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- Configure bean to convert JSON to POJO and vice versa -->
+	<bean id="jsonMessageConverter"
+		  class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+		<property name="objectMapper">
+			<bean id="jacksonObjectMapper" class="com.fasterxml.jackson.databind.ObjectMapper">
+				<property name="serializationInclusion">
+					<util:constant
+							static-field="com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL" />
+				</property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 注解驱动 -->
+	<mvc:annotation-driven />
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+</beans>

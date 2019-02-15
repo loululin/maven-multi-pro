@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:cache="http://www.springframework.org/schema/cache" xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://mybatis.org/schema/mybatis-spring
+  	http://mybatis.org/schema/mybatis-spring.xsd
+  	http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+  	http://www.springframework.org/schema/aop  
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/tx  
+    http://www.springframework.org/schema/tx/spring-tx.xsd
+    http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/task
+           http://www.springframework.org/schema/task/spring-task.xsd">
+
+	<!--引入配置属性文件 -->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:config/jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 配置数据源 使用的是druid数据源 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		init-method="init" destroy-method="close">
+		<property name="driverClassName" value="${datasource.driverClass}" />
+		<property name="url" value="${datasource.jdbcUrl}" />
+		<property name="username" value="${datasource.user}" />
+		<property name="password" value="${datasource.password}" />
+		<property name="initialSize" value="${datasource.initialSize}" /> 
+		<property name="minIdle" value="${datasource.minIdle}" /> 
+		<property name="maxActive" value="${datasource.maxActive}" /> 
+		<property name="maxWait" value="${datasource.maxWait}" /> 
+		<property name="timeBetweenEvictionRunsMillis" value="${datasource.timeBetweenEvictionRunsMillis}" /> 
+		<property name="minEvictableIdleTimeMillis" value="${datasource.minEvictableIdleTimeMillis}" /> 
+		<property name="validationQuery" value="${datasource.validationQuery}" /> 
+		<property name="testWhileIdle" value="${datasource.testWhileIdle}" /> 
+		<property name="testOnBorrow" value="${datasource.testOnBorrow}" /> 
+		<property name="testOnReturn" value="${datasource.testOnReturn}" /> 
+		<property name="poolPreparedStatements" value="${datasource.poolPreparedStatements}" />
+		<property name="maxOpenPreparedStatements" value="${datasource.maxOpenPreparedStatements}" /> 
+		<property name="removeAbandoned" value="${datasource.removeAbandoned}" /> 
+		<property name="removeAbandonedTimeout" value="${datasource.removeAbandonedTimeout}" /> 
+		<property name="filters" value="${datasource.filters}" /> 
+		<property name="logAbandoned" value="${datasource.logAbandoned}" /> 
+	</bean>
+
+	<bean name="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		p:dataSource-ref="dataSource">
+	</bean>
+
+	<!-- 通过aop定义事务增强切面 及性能统计 -->
+	<aop:config>
+		<aop:pointcut id="appDao"
+			expression="execution(* com.lulin.demo.dao.*.*(..))" />
+		<!--对dao配置性能统计-->
+		<aop:advisor pointcut-ref="appDao" advice-ref="appAroundMethodAdvisor" />
+
+	</aop:config>
+
+	<!--性能统计-->
+	<bean id="appAroundMethodAdvisor" class="com.lulin.demo.comm.util.EdenAdvisor" />
+
+	<!-- mybatis文件配置，扫描所有mapper文件 begin -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
+		p:dataSource-ref="dataSource" p:mapperLocations="classpath:mappers/*.xml"
+		p:configLocation="classpath:config/mybatis-config.xml">
+	</bean>
+
+	<!-- spring与mybatis整合配置，扫描所有dao -->
+	<mybatis:scan base-package="com.lulin.demo.dao"></mybatis:scan>
+	<!-- mybatis文件配置，扫描所有mapper文件 end -->
+
+	<!--使用ehcache缓存begin -->
+	<bean id="ehCacheManager"
+		class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation" value="classpath:config/ehcache.xml" />
+		<property name="shared" value="true" />
+	</bean>
+
+	<!-- 支持缓存注解 -->
+	<cache:annotation-driven cache-manager="cacheManager" />
+
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+		<property name="cacheManager" ref="ehCacheManager" />
+	</bean>
+	<!--使用ehcache缓存end -->
+</beans>           

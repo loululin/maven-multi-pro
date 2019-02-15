@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:cache="http://www.springframework.org/schema/cache" xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://mybatis.org/schema/mybatis-spring
+  	http://mybatis.org/schema/mybatis-spring.xsd
+  	http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+  	http://www.springframework.org/schema/aop  
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/tx  
+    http://www.springframework.org/schema/tx/spring-tx.xsd
+    http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/task
+           http://www.springframework.org/schema/task/spring-task.xsd">
+
+
+	<!--自动扫描含有@Service将其注入为bean 后面加入swagger2的配置类包路径-->
+	<context:component-scan base-package="com.lulin.demo.service,com.lulin.demo.comm.swagger2" />
+
+	<bean name="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		p:dataSource-ref="dataSource">
+	</bean>
+
+	<!-- 通过aop定义事务增强切面 及性能统计 -->
+	<aop:config>
+		<!--配置事务切入点 把事务控制在Service层 -->
+		<aop:pointcut id="serviceMethod"
+			expression="execution( * com.lulin.demo.service.impl.*.*(..))" />
+		<aop:pointcut id="appService"
+			expression="execution(* com.lulin.demo.service.impl.*.*(..))" />
+		<!--对service配置性能统计-->
+		<aop:advisor pointcut-ref="appService" advice-ref="appAroundMethodAdvisor" />
+		<!--配置事务通知 -->
+		<aop:advisor pointcut-ref="serviceMethod" advice-ref="txAdvice" />
+	</aop:config>
+
+	<!--性能统计-->
+	<bean id="appAroundMethodAdvisor" class="com.lulin.demo.comm.util.EdenAdvisor" />
+
+	<!-- 为事务通知添加事物处理特性 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="delete*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="insert*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="update*" propagation="REQUIRED"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="select*" propagation="SUPPORTS" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+</beans>
